@@ -153,10 +153,9 @@ export default async function GuruNilaiPage({ params }: PageProps) {
   // 8. Ambil santri yang terdaftar (enrollment aktif) di marhalah & TA ini
   const { data: enrollments } = await adminClient
     .from("enrollment")
-    .select("id, santri_id, status, santri(id, nis, nama, jenis_kelamin, deleted_at)")
+    .select("id, santri_id, santri(id, nis, nama, jenis_kelamin, deleted_at)")
     .eq("marhalah_id", marhalahId)
-    .eq("tahun_ajaran_id", activeSemester.tahun_ajaran_id)
-    .eq("status", "aktif");
+    .eq("tahun_ajaran_id", activeSemester.tahun_ajaran_id);
 
   interface RawEnrollment {
     id: string;

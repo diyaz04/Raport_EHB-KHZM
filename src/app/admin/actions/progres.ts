@@ -224,7 +224,6 @@ async function calculateProgresFallback(
           .select("id, santri!inner(deleted_at)", { count: "exact", head: true })
           .eq("marhalah_id", m.id)
           .eq("tahun_ajaran_id", sem.tahun_ajaran_id)
-          .eq("status", "aktif")
           .is("santri.deleted_at", null);
 
         // Mapel count (tipe = nilai)
@@ -429,10 +428,9 @@ export async function getProgresDrilldownData(
   // 6. Ambil Santri Enrolled Aktif
   const { data: enrollments } = await adminClient
     .from("enrollment")
-    .select("id, santri_id, status, santri(id, nis, nama, jenis_kelamin, deleted_at)")
+    .select("id, santri_id, santri(id, nis, nama, jenis_kelamin, deleted_at)")
     .eq("marhalah_id", marhalahId)
-    .eq("tahun_ajaran_id", semester.tahun_ajaran_id)
-    .eq("status", "aktif");
+    .eq("tahun_ajaran_id", semester.tahun_ajaran_id);
 
   interface RawEnrollItem {
     id: string;

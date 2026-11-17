@@ -150,7 +150,6 @@ export default async function GuruDashboardPage() {
           .from("enrollment")
           .select("id, marhalah_id, santri!inner(deleted_at)")
           .eq("tahun_ajaran_id", activeSemester.tahun_ajaran_id)
-          .eq("status", "aktif")
           .in("marhalah_id", marhalahIds)
           .is("santri.deleted_at", null),
         adminClient

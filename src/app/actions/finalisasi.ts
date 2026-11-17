@@ -131,10 +131,9 @@ export async function checkFinalisasiReadinessAction(
   // 3. Ambil Santri Enrolled Aktif
   const { data: enrollments } = await adminClient
     .from("enrollment")
-    .select("id, santri_id, status, santri(id, nis, nama, jenis_kelamin, deleted_at)")
+    .select("id, santri_id, santri(id, nis, nama, jenis_kelamin, deleted_at)")
     .eq("marhalah_id", marhalahId)
-    .eq("tahun_ajaran_id", tahunAjaranId)
-    .eq("status", "aktif");
+    .eq("tahun_ajaran_id", tahunAjaranId);
 
   interface RawEnrollItem {
     id: string;

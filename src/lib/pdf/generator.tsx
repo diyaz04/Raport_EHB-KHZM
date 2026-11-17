@@ -1,0 +1,318 @@
+import { renderToBuffer } from "@react-pdf/renderer";
+import React from "react";
+import fs from "fs";
+import path from "path";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  RaportDocument,
+  type RaportStudentData,
+  type RaportSubjectData,
+} from "./raport-document";
+import { getOrPublishRaportAction } from "@/app/actions/raport-terbit";
+
+export interface GenerateClassPdfResult {
+  buffer: Buffer;
+  durationMs: number;
+  totalSantri: number;
+  marhalahNama: string;
+  tahunAjaranNama: string;
+  semesterJenis: string;
+}
+
+/**
+ * Menghasilkan berkas PDF cetak massal satu kelas penuh (satu halaman per santri).
+ * Hanya memproses kelas yang status_raport-nya sudah 'final'.
+ */
+export async function generateClassRaportPdfBuffer({
+  marhalahId,
+  semesterId,
+}: {
+  marhalahId: string;
+  semesterId: string;
+}): Promise<GenerateClassPdfResult> {
+  const adminClient = createAdminClient();
+
+  // 1. Periksa Marhalah & Semester
+  const { data: marhalah, error: marhalahErr } = await adminClient
+    .from("marhalah")
+    .select("id, nama, tingkat")
+    .eq("id", marhalahId)
+    .single();
+
+  if (marhalahErr || !marhalah) {
+    throw new Error("Marhalah (kelas) tidak ditemukan.");
+  }
+
+  const { data: semester, error: semErr } = await adminClient
+    .from("semester")
+    .select("id, jenis, tahun_ajaran_id, tahun_ajaran:tahun_ajaran_id (id, nama)")
+    .eq("id", semesterId)
+    .single();
+
+  if (semErr || !semester) {
+    throw new Error("Semester tidak ditemukan.");
+  }
+
+  const tahunAjaranId = semester.tahun_ajaran_id;
+  const tahunAjaranNama =
+    (semester.tahun_ajaran as { nama?: string })?.nama || "-";
+
+  // 2. Validasi Status Final: HANYA STATUS FINAL YANG DIIZINKAN
+  const { data: statusRaport } = await adminClient
+    .from("status_raport")
+    .select("status")
+    .eq("marhalah_id", marhalahId)
+    .eq("semester_id", semesterId)
+    .maybeSingle();
+
+  if (statusRaport?.status !== "final") {
+    throw new Error(
+      "Raport marhalah " +
+        marhalah.nama +
+        " belum berstatus FINAL. Cetak massal hanya dapat dilakukan untuk kelas yang telah difinalisasi."
+    );
+  }
+
+  // 3. Ambil data lembaga & wali kelas
+  const { data: lembaga } = await adminClient
+    .from("pengaturan_lembaga")
+    .select("*")
+    .limit(1)
+    .maybeSingle();
+
+  const { data: waliRecord } = await adminClient
+    .from("guru_marhalah")
+    .select("guru_id, guru:guru_id (id, nama)")
+    .eq("marhalah_id", marhalahId)
+    .eq("tahun_ajaran_id", tahunAjaranId)
+    .maybeSingle();
+
+  const waliKelasNama =
+    waliRecord?.guru && typeof waliRecord.guru === "object" && "nama" in waliRecord.guru
+      ? (waliRecord.guru as { nama: string }).nama
+      : "Wali Kelas";
+
+  // 4. Ambil daftar mata pelajaran marhalah ini
+  const { data: marhalahMapelList } = await adminClient
+    .from("marhalah_mapel")
+    .select(
+      `
+      id,
+      urutan,
+      tipe,
+      mapel:mapel_id (id, nama, kode),
+      kitab:kitab_id (id, judul)
+    `
+    )
+    .eq("marhalah_id", marhalahId)
+    .eq("semester_id", semesterId)
+    .order("urutan", { ascending: true });
+
+  // 5. Ambil semua santri yang terdaftar di kelas ini
+  const { data: enrollments, error: enrollErr } = await adminClient
+    .from("enrollment")
+    .select(
+      `
+      id,
+      santri:santri_id (
+        id,
+        nis,
+        nama,
+        jenis_kelamin
+      )
+    `
+    )
+    .eq("marhalah_id", marhalahId)
+    .eq("tahun_ajaran_id", tahunAjaranId);
+
+  if (enrollErr || !enrollments || enrollments.length === 0) {
+    throw new Error("Tidak ada santri yang terdaftar di marhalah ini.");
+  }
+
+  const totalSantri = enrollments.length;
+
+  // 6. Urutkan santri berdasarkan NIS / Nama
+  const sortedEnrollments = [...enrollments].sort((a, b) => {
+    const santriA = a.santri as { nis?: string | null; nama?: string } | null;
+    const santriB = b.santri as { nis?: string | null; nama?: string } | null;
+    if (santriA?.nis && santriB?.nis) {
+      return santriA.nis.localeCompare(santriB.nis);
+    }
+    return (santriA?.nama || "").localeCompare(santriB?.nama || "");
+  });
+
+  // 7. Ambil semua nilai di kelas ini untuk semester bersangkutan
+  const enrollmentIds = sortedEnrollments.map((e) => e.id);
+  const { data: allNilai } = await adminClient
+    .from("nilai")
+    .select("enrollment_id, marhalah_mapel_id, nilai_angka, keterangan")
+    .in("enrollment_id", enrollmentIds)
+    .eq("semester_id", semesterId);
+
+  const nilaiByEnrollment = new Map<string, Map<string, number | null>>();
+  (allNilai || []).forEach((n) => {
+    if (!nilaiByEnrollment.has(n.enrollment_id)) {
+      nilaiByEnrollment.set(n.enrollment_id, new Map());
+    }
+    nilaiByEnrollment.get(n.enrollment_id)!.set(n.marhalah_mapel_id, n.nilai_angka);
+  });
+
+  // 8. Ambil semua catatan semester
+  const { data: allCatatan } = await adminClient
+    .from("catatan_semester")
+    .select(
+      `
+      enrollment_id,
+      akhlak,
+      ketekunan,
+      kerapihan,
+      kebersihan,
+      sakit,
+      izin,
+      alpa,
+      saran_wali_kelas,
+      naik_ke_marhalah:naik_ke_marhalah_id (nama)
+    `
+    )
+    .in("enrollment_id", enrollmentIds)
+    .eq("semester_id", semesterId);
+
+  interface CatatanRecord {
+    enrollment_id: string;
+    akhlak: string | null;
+    ketekunan: string | null;
+    kerapihan: string | null;
+    kebersihan: string | null;
+    sakit: number;
+    izin: number;
+    alpa: number;
+    saran_wali_kelas: string | null;
+    naik_ke_marhalah: { nama?: string } | null;
+  }
+
+  const catatanByEnrollment = new Map<string, CatatanRecord>();
+  ((allCatatan as unknown as CatatanRecord[]) || []).forEach((c) => {
+    catatanByEnrollment.set(c.enrollment_id, c);
+  });
+
+  // 9. Ambil peringkat final
+  const { data: allPeringkat } = await adminClient
+    .from("peringkat_final")
+    .select("enrollment_id, peringkat, total_nilai, rata_rata")
+    .in("enrollment_id", enrollmentIds)
+    .eq("semester_id", semesterId);
+
+  interface PeringkatRecord {
+    enrollment_id: string;
+    peringkat: number | null;
+    total_nilai: number | null;
+    rata_rata: number | null;
+  }
+
+  const peringkatByEnrollment = new Map<string, PeringkatRecord>();
+  ((allPeringkat as unknown as PeringkatRecord[]) || []).forEach((p) => {
+    peringkatByEnrollment.set(p.enrollment_id, p);
+  });
+
+  // 10. Ambil / pastikan raport_terbit untuk setiap santri (Kode Verifikasi & QR)
+  const studentsDataList: RaportStudentData[] = [];
+
+  for (const enr of sortedEnrollments) {
+    const santriObj = enr.santri as unknown as { id: string; nis?: string | null; nama?: string } | null;
+    if (!santriObj) continue;
+
+    // Pastikan terbit
+    const pubResult = await getOrPublishRaportAction({
+      enrollmentId: enr.id,
+      semesterId,
+    });
+
+    const studentNilaiMap = nilaiByEnrollment.get(enr.id) || new Map();
+    const mapelList: RaportSubjectData[] = (marhalahMapelList || []).map((mm, idx) => {
+      const mapelObj = mm.mapel as { nama?: string } | null;
+      const kitabObj = mm.kitab as { judul?: string } | null;
+      return {
+        urutan: idx + 1,
+        nama: mapelObj?.nama || "-",
+        kitab: kitabObj?.judul || "-",
+        nilai: studentNilaiMap.get(mm.id) ?? null,
+      };
+    });
+
+    const catatan = catatanByEnrollment.get(enr.id);
+    const peringkat = peringkatByEnrollment.get(enr.id);
+    const naikMarhalahObj = catatan?.naik_ke_marhalah as { nama?: string } | null;
+
+    studentsDataList.push({
+      santriId: santriObj.id,
+      nama: santriObj.nama || "-",
+      nis: santriObj.nis || null,
+      marhalah: marhalah.nama,
+      tahunAjaran: tahunAjaranNama,
+      semester: semester.jenis,
+      waliKelas: waliKelasNama,
+      pimpinanNama: lembaga?.nama_pimpinan || "Drs. KH. Ahmad Dimyathi",
+      tempatTerbit: lembaga?.tempat_terbit || "Kudus",
+      tanggalTerbit: pubResult.diterbitkanPada
+        ? new Intl.DateTimeFormat("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          }).format(new Date(pubResult.diterbitkanPada))
+        : new Intl.DateTimeFormat("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          }).format(new Date()),
+      isDraft: false, // Selalu false karena hanya status final
+      qrDataUrl: pubResult.qrDataUrl || null,
+      kodeVerifikasi: pubResult.kodeVerifikasi || null,
+      ranking: peringkat?.peringkat ?? null,
+      totalSantri,
+      totalNilai: peringkat?.total_nilai ?? null,
+      rataRata: peringkat?.rata_rata ?? null,
+      mapelList,
+      catatan: {
+        akhlak: catatan?.akhlak ?? null,
+        ketekunan: catatan?.ketekunan ?? null,
+        kerapihan: catatan?.kerapihan ?? null,
+        kebersihan: catatan?.kebersihan ?? null,
+        sakit: catatan?.sakit ?? 0,
+        izin: catatan?.izin ?? 0,
+        alpa: catatan?.alpa ?? 0,
+        saran_wali_kelas: catatan?.saran_wali_kelas ?? null,
+        naik_ke_marhalah: naikMarhalahObj?.nama ?? null,
+      },
+    });
+  }
+
+  // 11. Muat Logo Pesantren (jika ada di public/logo.png)
+  let logoBase64: string | null = null;
+  try {
+    const logoFilePath = path.join(process.cwd(), "public", "logo.png");
+    if (fs.existsSync(logoFilePath)) {
+      const logoBuffer = fs.readFileSync(logoFilePath);
+      logoBase64 = `data:image/png;base64,${logoBuffer.toString("base64")}`;
+    }
+  } catch {
+    logoBase64 = null;
+  }
+
+  // 12. Rendisi Dokumen PDF & Ukur Durasi Waktu Generate
+  const docElement = (
+    <RaportDocument students={studentsDataList} logoBase64={logoBase64} />
+  ) as unknown as Parameters<typeof renderToBuffer>[0];
+
+  const startTime = performance.now();
+  const pdfBuffer = await renderToBuffer(docElement);
+  const durationMs = Math.round(performance.now() - startTime);
+
+  return {
+    buffer: pdfBuffer,
+    durationMs,
+    totalSantri: studentsDataList.length,
+    marhalahNama: marhalah.nama,
+    tahunAjaranNama,
+    semesterJenis: semester.jenis,
+  };
+}

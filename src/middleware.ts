@@ -12,8 +12,7 @@ export async function middleware(request: NextRequest) {
   const isPublicRoute =
     path === "/login" ||
     path.startsWith("/api/public") ||
-    path.startsWith("/verifikasi") ||
-    path === "/";
+    path.startsWith("/verifikasi");
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -22,7 +21,9 @@ export async function middleware(request: NextRequest) {
   if (!supabaseUrl || !supabaseKey || supabaseUrl.includes("placeholder")) {
     if (!isPublicRoute) {
       url.pathname = "/login";
-      url.searchParams.set("redirect", path);
+      if (path !== "/") {
+        url.searchParams.set("redirect", path);
+      }
       return NextResponse.redirect(url);
     }
     return supabaseResponse;
@@ -59,7 +60,9 @@ export async function middleware(request: NextRequest) {
   if (!user) {
     if (!isPublicRoute) {
       url.pathname = "/login";
-      url.searchParams.set("redirect", path);
+      if (path !== "/") {
+        url.searchParams.set("redirect", path);
+      }
       return NextResponse.redirect(url);
     }
     return supabaseResponse;

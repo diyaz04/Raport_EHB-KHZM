@@ -110,7 +110,7 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-export function AdminSidebarNav() {
+export function AdminSidebarNav({ onNavigate }: { onNavigate?: () => void } = {}) {
   const pathname = usePathname();
 
   const isItemActive = (href: string) => {
@@ -140,6 +140,7 @@ export function AdminSidebarNav() {
                   key={item.href}
                   href={item.href}
                   prefetch={true}
+                  onClick={onNavigate}
                   className={cn(
                     "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-150",
                     active

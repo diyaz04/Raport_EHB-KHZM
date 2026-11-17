@@ -6,6 +6,7 @@ import { ActAsBanner } from "@/components/act-as-banner";
 import { LogoutButton } from "@/components/logout-button";
 import { Badge } from "@/components/ui/badge";
 import { AdminSidebarNav } from "@/components/layout/admin-sidebar-nav";
+import { AdminMobileNav } from "@/components/layout/admin-mobile-nav";
 
 export default async function AdminLayout({
   children,
@@ -15,9 +16,15 @@ export default async function AdminLayout({
   const context = await getEffectiveContext();
 
   return (
-    <div className="flex min-h-screen bg-zinc-50/50">
-      {/* SIDEBAR ADMIN */}
-      <aside className="w-64 shrink-0 border-r border-zinc-200 bg-white flex flex-col justify-between">
+    <div className="flex min-h-screen flex-col md:flex-row bg-zinc-50/50">
+      {/* MOBILE TOPBAR & BOTTOM DOCK (< md) */}
+      <AdminMobileNav
+        userEmail={context.user?.email}
+        userName={context.profile?.nama ?? undefined}
+      />
+
+      {/* DESKTOP SIDEBAR ADMIN (>= md) */}
+      <aside className="hidden md:flex w-64 shrink-0 border-r border-zinc-200 bg-white flex-col justify-between sticky top-0 h-screen">
         <div>
           {/* Header Sidebar */}
           <div className="flex h-16 items-center gap-3 border-b border-zinc-200 px-6">
@@ -60,11 +67,13 @@ export default async function AdminLayout({
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         {context.isActingAs && context.effectiveGuruName ? (
           <ActAsBanner guruName={context.effectiveGuruName} />
         ) : null}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 pb-24 md:pb-8">
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -71,7 +71,7 @@ export default async function GuruLayout({
       </header>
 
       {/* MAIN BODY GURU */}
-      <main className="flex-1 container mx-auto max-w-7xl p-4 sm:p-6 md:p-8">
+      <main className="flex-1 container mx-auto max-w-7xl p-4 sm:p-6 md:p-8 pb-20 md:pb-8">
         {children}
       </main>
     </div>

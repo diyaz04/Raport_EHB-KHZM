@@ -64,7 +64,7 @@ function TabsTrigger({
       data-slot="tabs-trigger"
       className={cn(
         "relative inline-flex items-center justify-center gap-1.5 rounded-md border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-xs",
+        "data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-950 data-[state=active]:border-emerald-400/30 data-[state=active]:font-semibold data-[state=active]:shadow-2xs",
         className
       )}
       {...props}

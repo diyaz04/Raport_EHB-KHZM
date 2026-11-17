@@ -931,7 +931,7 @@ export function EhbDetailClient({
         <TabsList className="bg-slate-100/90 p-1.5 rounded-xl border border-slate-200 w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 shadow-2xs">
           <TabsTrigger
             value="ruangan"
-            className="text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-emerald-800 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/80 py-2.5 px-3 rounded-lg flex items-center justify-center transition-all hover:text-slate-900"
+            className="text-xs sm:text-sm font-semibold data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-950 data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-emerald-400/40 data-[state=active]:ring-1 data-[state=active]:ring-emerald-500/20 py-2.5 px-3 rounded-lg flex items-center justify-center transition-all hover:text-slate-900"
           >
             <DoorOpen className="w-4 h-4 mr-1.5 text-emerald-700 shrink-0" />
             <span>1. Ruangan</span>
@@ -941,9 +941,9 @@ export function EhbDetailClient({
           </TabsTrigger>
           <TabsTrigger
             value="sesi"
-            className="text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-emerald-800 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/80 py-2.5 px-3 rounded-lg flex items-center justify-center transition-all hover:text-slate-900"
+            className="text-xs sm:text-sm font-semibold data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-950 data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-emerald-400/40 data-[state=active]:ring-1 data-[state=active]:ring-emerald-500/20 py-2.5 px-3 rounded-lg flex items-center justify-center transition-all hover:text-slate-900"
           >
-            <Clock className="w-4 h-4 mr-1.5 text-blue-700 shrink-0" />
+            <Clock className="w-4 h-4 mr-1.5 text-emerald-700 shrink-0" />
             <span>2. Sesi Ujian</span>
             <span className="ml-1.5 px-1.5 py-0.5 bg-slate-200 text-slate-700 text-[11px] rounded-full font-bold">
               {sesiList.length}
@@ -951,9 +951,9 @@ export function EhbDetailClient({
           </TabsTrigger>
           <TabsTrigger
             value="jadwal"
-            className="text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-emerald-800 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/80 py-2.5 px-3 rounded-lg flex items-center justify-center transition-all hover:text-slate-900"
+            className="text-xs sm:text-sm font-semibold data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-950 data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-emerald-400/40 data-[state=active]:ring-1 data-[state=active]:ring-emerald-500/20 py-2.5 px-3 rounded-lg flex items-center justify-center transition-all hover:text-slate-900"
           >
-            <BookOpen className="w-4 h-4 mr-1.5 text-indigo-700 shrink-0" />
+            <BookOpen className="w-4 h-4 mr-1.5 text-emerald-700 shrink-0" />
             <span>3. Jadwal Mapel</span>
             <span className="ml-1.5 px-1.5 py-0.5 bg-slate-200 text-slate-700 text-[11px] rounded-full font-bold">
               {jadwalList.length}
@@ -961,9 +961,9 @@ export function EhbDetailClient({
           </TabsTrigger>
           <TabsTrigger
             value="peserta"
-            className="text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-emerald-800 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/80 py-2.5 px-3 rounded-lg flex items-center justify-center transition-all hover:text-slate-900"
+            className="text-xs sm:text-sm font-semibold data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-950 data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-emerald-400/40 data-[state=active]:ring-1 data-[state=active]:ring-emerald-500/20 py-2.5 px-3 rounded-lg flex items-center justify-center transition-all hover:text-slate-900"
           >
-            <Users className="w-4 h-4 mr-1.5 text-teal-700 shrink-0" />
+            <Users className="w-4 h-4 mr-1.5 text-emerald-700 shrink-0" />
             <span>4. Peserta & Penempatan</span>
             <span className="ml-1.5 px-1.5 py-0.5 bg-slate-200 text-slate-700 text-[11px] rounded-full font-bold">
               {pesertaList.length}
@@ -971,7 +971,7 @@ export function EhbDetailClient({
           </TabsTrigger>
           <TabsTrigger
             value="dokumen"
-            className="text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-emerald-800 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/80 py-2.5 px-3 rounded-lg flex items-center justify-center transition-all hover:text-slate-900 col-span-2 sm:col-span-1"
+            className="text-xs sm:text-sm font-semibold data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-950 data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-emerald-400/40 data-[state=active]:ring-1 data-[state=active]:ring-emerald-500/20 py-2.5 px-3 rounded-lg flex items-center justify-center transition-all hover:text-slate-900 col-span-2 sm:col-span-1"
           >
             <Printer className="w-4 h-4 mr-1.5 text-emerald-700 shrink-0" />
             <span>5. Berkas & Cetak</span>

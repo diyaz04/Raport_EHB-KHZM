@@ -1,11 +1,12 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { GraduationCapIcon, LayoutDashboardIcon } from "lucide-react";
+import { GraduationCapIcon } from "lucide-react";
 import { getEffectiveContext } from "@/lib/auth/context";
 import { ActAsBanner } from "@/components/act-as-banner";
 import { LogoutButton } from "@/components/logout-button";
 import { Badge } from "@/components/ui/badge";
+import { GuruHeaderNav } from "@/components/layout/guru-header-nav";
 
 export default async function GuruLayout({
   children,
@@ -42,16 +43,7 @@ export default async function GuruLayout({
               </div>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-1">
-              <Link
-                href="/guru/dashboard"
-                prefetch={true}
-                className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-zinc-900 bg-zinc-100"
-              >
-                <LayoutDashboardIcon className="h-4 w-4 text-primary" />
-                Dashboard
-              </Link>
-            </nav>
+            <GuruHeaderNav />
           </div>
 
           <div className="flex items-center gap-4">

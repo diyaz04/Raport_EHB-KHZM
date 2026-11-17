@@ -214,7 +214,26 @@ export async function generateClassRaportPdfBuffer({
     peringkatByEnrollment.set(p.enrollment_id, p);
   });
 
-  // 10. Ambil / pastikan raport_terbit untuk setiap santri (Kode Verifikasi & QR)
+  // 10. Hitung Nilai Rata-rata Kelas per Marhalah Mapel
+  const mapelSumCount = new Map<string, { sum: number; count: number }>();
+  (allNilai || []).forEach((n) => {
+    if (n.nilai_angka !== null && n.nilai_angka !== undefined) {
+      const cur = mapelSumCount.get(n.marhalah_mapel_id) || { sum: 0, count: 0 };
+      cur.sum += n.nilai_angka;
+      cur.count += 1;
+      mapelSumCount.set(n.marhalah_mapel_id, cur);
+    }
+  });
+
+  const mapelAverageMap = new Map<string, string>();
+  mapelSumCount.forEach((val, mapelId) => {
+    if (val.count > 0) {
+      const avg = val.sum / val.count;
+      mapelAverageMap.set(mapelId, avg.toFixed(1).replace(".", ","));
+    }
+  });
+
+  // 11. Ambil / pastikan raport_terbit untuk setiap santri (Kode Verifikasi & QR)
   const studentsDataList: RaportStudentData[] = [];
 
   for (const enr of sortedEnrollments) {
@@ -231,11 +250,13 @@ export async function generateClassRaportPdfBuffer({
     const mapelList: RaportSubjectData[] = (marhalahMapelList || []).map((mm, idx) => {
       const mapelObj = mm.mapel as { nama?: string } | null;
       const kitabObj = mm.kitab as { judul?: string } | null;
+      const avgStr = mapelAverageMap.get(mm.id) || "-";
       return {
         urutan: idx + 1,
         nama: mapelObj?.nama || "-",
         kitab: kitabObj?.judul || "-",
         nilai: studentNilaiMap.get(mm.id) ?? null,
+        rataRata: avgStr,
       };
     });
 
@@ -250,20 +271,16 @@ export async function generateClassRaportPdfBuffer({
       marhalah: marhalah.nama,
       tahunAjaran: tahunAjaranNama,
       semester: semester.jenis,
-      waliKelas: waliKelasNama,
-      pimpinanNama: lembaga?.nama_pimpinan || "Drs. KH. Ahmad Dimyathi",
-      tempatTerbit: lembaga?.tempat_terbit || "Kudus",
+      waliKelas: waliKelasNama || "SINAR KHOTIMATUL HUSNA, S.Pd",
+      pimpinanNama: lembaga?.nama_pimpinan || "KH. MIMIH SAEFUL MILLAH, S.Pd",
+      tempatTerbit: lembaga?.tempat_terbit || "Sukamenak",
       tanggalTerbit: pubResult.diterbitkanPada
         ? new Intl.DateTimeFormat("id-ID", {
             day: "numeric",
             month: "long",
             year: "numeric",
           }).format(new Date(pubResult.diterbitkanPada))
-        : new Intl.DateTimeFormat("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          }).format(new Date()),
+        : "20 Desember 2025",
       isDraft: false, // Selalu false karena hanya status final
       qrDataUrl: pubResult.qrDataUrl || null,
       kodeVerifikasi: pubResult.kodeVerifikasi || null,
@@ -286,7 +303,7 @@ export async function generateClassRaportPdfBuffer({
     });
   }
 
-  // 11. Muat Logo Pesantren (jika ada di public/logo.png)
+  // 12. Muat Logo & TTD Pimpinan Pesantren (jika ada di public/)
   let logoBase64: string | null = null;
   try {
     const logoFilePath = path.join(process.cwd(), "public", "logo.png");
@@ -298,9 +315,24 @@ export async function generateClassRaportPdfBuffer({
     logoBase64 = null;
   }
 
-  // 12. Rendisi Dokumen PDF & Ukur Durasi Waktu Generate
+  let ttdPimpinanBase64: string | null = null;
+  try {
+    const ttdFilePath = path.join(process.cwd(), "public", "ttd-pimpinan.png");
+    if (fs.existsSync(ttdFilePath)) {
+      const ttdBuffer = fs.readFileSync(ttdFilePath);
+      ttdPimpinanBase64 = `data:image/png;base64,${ttdBuffer.toString("base64")}`;
+    }
+  } catch {
+    ttdPimpinanBase64 = null;
+  }
+
+  // 13. Rendisi Dokumen PDF & Ukur Durasi Waktu Generate
   const docElement = (
-    <RaportDocument students={studentsDataList} logoBase64={logoBase64} />
+    <RaportDocument
+      students={studentsDataList}
+      logoBase64={logoBase64}
+      ttdPimpinanBase64={ttdPimpinanBase64}
+    />
   ) as unknown as Parameters<typeof renderToBuffer>[0];
 
   const startTime = performance.now();

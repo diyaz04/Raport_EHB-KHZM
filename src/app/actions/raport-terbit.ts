@@ -288,11 +288,11 @@ export async function getOrPublishRaportAction({
       id: semesterId,
       jenis: semester.jenis,
     },
-    wali_kelas: waliKelasNama,
+    wali_kelas: waliKelasNama || "SINAR KHOTIMATUL HUSNA, S.Pd",
     pimpinan: {
-      nama: lembaga?.nama_pimpinan || "Pimpinan Pesantren",
-      lembaga: lembaga?.nama_lembaga || "K.H. Zumratul Muttaqin",
-      tempat_terbit: lembaga?.tempat_terbit || "Kudus",
+      nama: lembaga?.nama_pimpinan || "KH. MIMIH SAEFUL MILLAH, S.Pd",
+      lembaga: lembaga?.nama_lembaga || "KH ZUMRATUL MUTTAQIN",
+      tempat_terbit: lembaga?.tempat_terbit || "Sukamenak",
     },
     peringkat: {
       peringkat: peringkatFinal?.peringkat ?? null,

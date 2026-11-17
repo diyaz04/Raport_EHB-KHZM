@@ -68,8 +68,7 @@ export async function getOrPublishRaportAction({
       ),
       marhalah:marhalah_id (
         id,
-        nama,
-        tingkat
+        nama
       ),
       tahun_ajaran:tahun_ajaran_id (
         id,
@@ -225,9 +224,8 @@ export async function getOrPublishRaportAction({
       `
       id,
       urutan,
-      mapel:mapel_id (id, nama, kode),
-      kitab:kitab_id (id, judul),
-      guru:guru_id (id, nama)
+      mapel:mapel_id (id, nama),
+      kitab:kitab_id (id, nama)
     `
     )
     .eq("marhalah_id", marhalahId)
@@ -236,34 +234,40 @@ export async function getOrPublishRaportAction({
 
   const { data: nilaiList } = await adminClient
     .from("nilai")
-    .select("marhalah_mapel_id, nilai_angka, keterangan")
+    .select("marhalah_mapel_id, angka")
     .eq("enrollment_id", enrollmentId)
     .eq("semester_id", semesterId);
 
-  const nilaiMap = new Map<string, { nilai_angka: number | null; keterangan: string | null }>();
+  const nilaiMap = new Map<string, { angka: number | null }>();
   (nilaiList || []).forEach((n) => {
     nilaiMap.set(n.marhalah_mapel_id, {
-      nilai_angka: n.nilai_angka,
-      keterangan: n.keterangan,
+      angka: n.angka,
     });
   });
 
   const daftarNilai = (marhalahMapelList || []).map((mm, idx) => {
     const val = nilaiMap.get(mm.id);
-    const mapelObj = mm.mapel as { id?: string; nama?: string; kode?: string } | null;
-    const kitabObj = mm.kitab as { id?: string; judul?: string } | null;
-    const guruObj = mm.guru as { id?: string; nama?: string } | null;
+    const mapelObj = mm.mapel as { id?: string; nama?: string } | null;
+    const kitabObj = mm.kitab as { id?: string; nama?: string } | null;
 
     return {
       nomor: idx + 1,
       mapel_id: mapelObj?.id || null,
       mapel_nama: mapelObj?.nama || "-",
-      kitab_judul: kitabObj?.judul || "-",
-      guru_nama: guruObj?.nama || "-",
-      nilai_angka: val?.nilai_angka ?? null,
-      keterangan: val?.keterangan ?? null,
+      kitab_judul: kitabObj?.nama || "-",
+      nilai_angka: val?.angka ?? null,
     };
   });
+
+  const validScores = daftarNilai
+    .map((d) => d.nilai_angka)
+    .filter((v): v is number => v !== null && v !== undefined);
+  const totalNilaiSantri =
+    validScores.length > 0 ? validScores.reduce((acc, curr) => acc + curr, 0) : null;
+  const rataRataSantri =
+    validScores.length > 0 && totalNilaiSantri !== null
+      ? Number((totalNilaiSantri / validScores.length).toFixed(1))
+      : null;
 
   // F. Bentuk Snapshot Objek Kanonikal
   const snapshot: Record<string, unknown> = {
@@ -297,9 +301,8 @@ export async function getOrPublishRaportAction({
     peringkat: {
       peringkat: peringkatFinal?.peringkat ?? null,
       total_santri: totalSantri ?? 0,
-      total_nilai: peringkatFinal?.total_nilai ?? null,
-      rata_rata: peringkatFinal?.rata_rata ?? null,
-      catatan_seri: peringkatFinal?.catatan_seri ?? null,
+      total_nilai: totalNilaiSantri,
+      rata_rata: rataRataSantri,
     },
     catatan_semester: {
       akhlak: catatan?.akhlak ?? null,

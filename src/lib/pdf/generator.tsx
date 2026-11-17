@@ -35,7 +35,7 @@ export async function generateClassRaportPdfBuffer({
   // 1. Periksa Marhalah & Semester
   const { data: marhalah, error: marhalahErr } = await adminClient
     .from("marhalah")
-    .select("id, nama, tingkat")
+    .select("id, nama")
     .eq("id", marhalahId)
     .single();
 
@@ -100,8 +100,8 @@ export async function generateClassRaportPdfBuffer({
       id,
       urutan,
       tipe,
-      mapel:mapel_id (id, nama, kode),
-      kitab:kitab_id (id, judul)
+      mapel:mapel_id (id, nama),
+      kitab:kitab_id (id, nama)
     `
     )
     .eq("marhalah_id", marhalahId)
@@ -145,7 +145,7 @@ export async function generateClassRaportPdfBuffer({
   const enrollmentIds = sortedEnrollments.map((e) => e.id);
   const { data: allNilai } = await adminClient
     .from("nilai")
-    .select("enrollment_id, marhalah_mapel_id, nilai_angka, keterangan")
+    .select("enrollment_id, marhalah_mapel_id, angka")
     .in("enrollment_id", enrollmentIds)
     .eq("semester_id", semesterId);
 
@@ -154,7 +154,7 @@ export async function generateClassRaportPdfBuffer({
     if (!nilaiByEnrollment.has(n.enrollment_id)) {
       nilaiByEnrollment.set(n.enrollment_id, new Map());
     }
-    nilaiByEnrollment.get(n.enrollment_id)!.set(n.marhalah_mapel_id, n.nilai_angka);
+    nilaiByEnrollment.get(n.enrollment_id)!.set(n.marhalah_mapel_id, n.angka);
   });
 
   // 8. Ambil semua catatan semester
@@ -198,15 +198,13 @@ export async function generateClassRaportPdfBuffer({
   // 9. Ambil peringkat final
   const { data: allPeringkat } = await adminClient
     .from("peringkat_final")
-    .select("enrollment_id, peringkat, total_nilai, rata_rata")
+    .select("enrollment_id, peringkat")
     .in("enrollment_id", enrollmentIds)
     .eq("semester_id", semesterId);
 
   interface PeringkatRecord {
     enrollment_id: string;
     peringkat: number | null;
-    total_nilai: number | null;
-    rata_rata: number | null;
   }
 
   const peringkatByEnrollment = new Map<string, PeringkatRecord>();
@@ -217,9 +215,9 @@ export async function generateClassRaportPdfBuffer({
   // 10. Hitung Nilai Rata-rata Kelas per Marhalah Mapel
   const mapelSumCount = new Map<string, { sum: number; count: number }>();
   (allNilai || []).forEach((n) => {
-    if (n.nilai_angka !== null && n.nilai_angka !== undefined) {
+    if (n.angka !== null && n.angka !== undefined) {
       const cur = mapelSumCount.get(n.marhalah_mapel_id) || { sum: 0, count: 0 };
-      cur.sum += n.nilai_angka;
+      cur.sum += n.angka;
       cur.count += 1;
       mapelSumCount.set(n.marhalah_mapel_id, cur);
     }
@@ -249,12 +247,12 @@ export async function generateClassRaportPdfBuffer({
     const studentNilaiMap = nilaiByEnrollment.get(enr.id) || new Map();
     const mapelList: RaportSubjectData[] = (marhalahMapelList || []).map((mm, idx) => {
       const mapelObj = mm.mapel as { nama?: string } | null;
-      const kitabObj = mm.kitab as { judul?: string } | null;
+      const kitabObj = mm.kitab as { nama?: string } | null;
       const avgStr = mapelAverageMap.get(mm.id) || "-";
       return {
         urutan: idx + 1,
         nama: mapelObj?.nama || "-",
-        kitab: kitabObj?.judul || "-",
+        kitab: kitabObj?.nama || "-",
         nilai: studentNilaiMap.get(mm.id) ?? null,
         rataRata: avgStr,
       };
@@ -263,6 +261,17 @@ export async function generateClassRaportPdfBuffer({
     const catatan = catatanByEnrollment.get(enr.id);
     const peringkat = peringkatByEnrollment.get(enr.id);
     const naikMarhalahObj = catatan?.naik_ke_marhalah as { nama?: string } | null;
+
+    // Hitung total nilai & rata-rata santri dari mapelList
+    const scores = Array.from(studentNilaiMap.values()).filter(
+      (v): v is number => v !== null && v !== undefined
+    );
+    const studentTotalNilai =
+      scores.length > 0 ? scores.reduce((acc, cur) => acc + cur, 0) : null;
+    const studentRataRata =
+      scores.length > 0 && studentTotalNilai !== null
+        ? studentTotalNilai / scores.length
+        : null;
 
     studentsDataList.push({
       santriId: santriObj.id,
@@ -286,8 +295,8 @@ export async function generateClassRaportPdfBuffer({
       kodeVerifikasi: pubResult.kodeVerifikasi || null,
       ranking: peringkat?.peringkat ?? null,
       totalSantri,
-      totalNilai: peringkat?.total_nilai ?? null,
-      rataRata: peringkat?.rata_rata ?? null,
+      totalNilai: studentTotalNilai,
+      rataRata: studentRataRata,
       mapelList,
       catatan: {
         akhlak: catatan?.akhlak ?? null,

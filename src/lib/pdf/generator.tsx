@@ -301,13 +301,25 @@ export async function generateClassRaportPdfBuffer({
           }).format(new Date(pubResult.diterbitkanPada))
         : "20 Desember 2025");
 
-    // Pastikan QR Code & Kode Verifikasi selalu terisi valid
+    // Pastikan QR Code & Kode Verifikasi selalu terisi valid dengan domain terkini
+    let configuredDomain: string | undefined = undefined;
+    if (lembaga?.logo_path) {
+      try {
+        const parsed = JSON.parse(lembaga.logo_path);
+        if (parsed && typeof parsed.domain_url === "string") {
+          configuredDomain = parsed.domain_url.trim();
+        }
+      } catch {
+        // logo_path bukan JSON
+      }
+    }
+
     const finalKodeVerifikasi =
       pubResult.kodeVerifikasi ||
       `ZM-${(santriObj.nis || enr.id.substring(0, 8)).toUpperCase()}`;
     const finalQrDataUrl =
       pubResult.qrDataUrl ||
-      (await generateVerificationQRCode(finalKodeVerifikasi));
+      (await generateVerificationQRCode(finalKodeVerifikasi, configuredDomain));
 
     studentsDataList.push({
       santriId: santriObj.id,

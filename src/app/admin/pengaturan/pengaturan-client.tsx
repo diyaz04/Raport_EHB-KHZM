@@ -24,6 +24,7 @@ import {
   RotateCcw,
   QrCode,
   FileText,
+  Globe,
 } from "lucide-react";
 import {
   updatePengaturanLembagaAction,
@@ -207,6 +208,24 @@ export function PengaturanClient({ initialData }: PengaturanClientProps) {
                     Nama lengkap beserta gelar pimpinan pondok pesantren yang tercetak di bawah kolom tanda tangan kanan.
                   </p>
                 </div>
+
+                {/* Domain / URL Publik QR Code */}
+                <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                  <Label htmlFor="domain_url" className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-slate-400" />
+                    Domain / URL Publik Verifikasi QR (Opsional)
+                  </Label>
+                  <Input
+                    id="domain_url"
+                    value={formData.domain_url || ""}
+                    onChange={(e) => handleChange("domain_url", e.target.value)}
+                    placeholder="Otomatis mengikuti domain Vercel yang aktif"
+                    className="h-9 text-sm"
+                  />
+                  <p className="text-[11px] text-slate-400">
+                    Bila dikosongkan, QR Code otomatis mendeteksi domain Vercel yang sedang Anda akses. Anda juga dapat menentukan domain custom sendiri (misal: <span className="font-mono text-slate-600">https://raport-ehb-khzm.vercel.app</span>).
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
@@ -336,7 +355,9 @@ export function PengaturanClient({ initialData }: PengaturanClientProps) {
                       </div>
                       <div className="leading-tight">
                         <div className="text-[8px] font-bold text-black">Validasi Rapor Digital</div>
-                        <div className="text-[7px] text-slate-500">Pindai QR keaslian</div>
+                        <div className="text-[7px] text-slate-500 truncate max-w-[140px]">
+                          {formData.domain_url ? formData.domain_url : "https://[domain-vercel]/verifikasi/..."}
+                        </div>
                         <div className="text-[7px] font-mono font-bold text-slate-700">ID: ZM-7B2A91D0</div>
                       </div>
                     </div>

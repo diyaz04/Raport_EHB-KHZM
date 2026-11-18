@@ -167,8 +167,16 @@ export async function getOrPublishRaportAction({
     .maybeSingle();
 
   if (existingValid && !forceNewVersion) {
+    let configuredDomain: string | undefined = undefined;
+    if (existingValid.snapshot && typeof existingValid.snapshot === "object") {
+      const snapObj = existingValid.snapshot as Record<string, unknown>;
+      if (typeof snapObj.domain_url === "string") {
+        configuredDomain = snapObj.domain_url;
+      }
+    }
     const qrDataUrl = await generateVerificationQRCode(
-      existingValid.kode_verifikasi
+      existingValid.kode_verifikasi,
+      configuredDomain
     );
     return {
       ok: true,
@@ -407,7 +415,19 @@ export async function getOrPublishRaportAction({
   });
 
   // K. Bangkitkan QR Code Data URL
-  const qrDataUrl = await generateVerificationQRCode(kodeVerifikasi);
+  let configuredDomain: string | undefined = undefined;
+  if (lembaga?.logo_path) {
+    try {
+      const parsed = JSON.parse(lembaga.logo_path);
+      if (parsed && typeof parsed.domain_url === "string") {
+        configuredDomain = parsed.domain_url.trim();
+      }
+    } catch {
+      // logo_path bukan JSON
+    }
+  }
+
+  const qrDataUrl = await generateVerificationQRCode(kodeVerifikasi, configuredDomain);
 
   return {
     ok: true,
@@ -486,7 +506,15 @@ export async function getRaportTerbitInfoAction(
     };
   }
 
-  const qrDataUrl = await generateVerificationQRCode(terbit.kode_verifikasi);
+  let configuredDomain: string | undefined = undefined;
+  if (terbit.snapshot && typeof terbit.snapshot === "object") {
+    const snapObj = terbit.snapshot as Record<string, unknown>;
+    if (typeof snapObj.domain_url === "string") {
+      configuredDomain = snapObj.domain_url;
+    }
+  }
+
+  const qrDataUrl = await generateVerificationQRCode(terbit.kode_verifikasi, configuredDomain);
 
   return {
     ok: true,

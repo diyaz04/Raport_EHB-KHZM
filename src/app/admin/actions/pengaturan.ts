@@ -12,6 +12,7 @@ export interface PengaturanLembagaData {
   tempat_terbit: string;
   tanggal_raport: string;
   nama_pimpinan: string;
+  domain_url?: string;
   logo_path?: string | null;
   updated_at?: string;
 }
@@ -68,15 +69,20 @@ export async function getPengaturanLembagaAction(): Promise<PengaturanActionResu
       };
     }
 
-    // Ekstraksi tanggal_raport dari row (jika ada kolom tanggal_raport) atau dari logo_path (JSON)
+    // Ekstraksi tanggal_raport dan domain_url dari row atau dari logo_path (JSON)
     let tanggalRaport = defaultData.tanggal_raport;
+    let domainUrl = "";
     if ("tanggal_raport" in data && typeof (data as Record<string, unknown>).tanggal_raport === "string") {
       tanggalRaport = (data as Record<string, unknown>).tanggal_raport as string;
-    } else if (data.logo_path) {
+    }
+    if (data.logo_path) {
       try {
         const parsed = JSON.parse(data.logo_path);
-        if (parsed && typeof parsed.tanggal_raport === "string") {
+        if (parsed && typeof parsed.tanggal_raport === "string" && !("tanggal_raport" in data)) {
           tanggalRaport = parsed.tanggal_raport;
+        }
+        if (parsed && typeof parsed.domain_url === "string") {
+          domainUrl = parsed.domain_url;
         }
       } catch {
         // logo_path bukan JSON
@@ -94,6 +100,7 @@ export async function getPengaturanLembagaAction(): Promise<PengaturanActionResu
         tempat_terbit: data.tempat_terbit || defaultData.tempat_terbit,
         tanggal_raport: tanggalRaport,
         nama_pimpinan: data.nama_pimpinan || defaultData.nama_pimpinan,
+        domain_url: domainUrl,
         logo_path: data.logo_path,
         updated_at: data.updated_at,
       },
@@ -143,9 +150,12 @@ export async function updatePengaturanLembagaAction(
 
   const adminClient = createAdminClient();
 
-  // Simpan tanggal_raport ke metadata JSON di logo_path agar kompatibel tanpa alter table
+  const domainUrl = (values.domain_url || "").trim().replace(/\/$/, "");
+
+  // Simpan tanggal_raport dan domain_url ke metadata JSON di logo_path agar kompatibel tanpa alter table
   const metaJson = JSON.stringify({
     tanggal_raport: tanggalRaport,
+    domain_url: domainUrl || undefined,
     updated_at: new Date().toISOString(),
   });
 
@@ -230,6 +240,7 @@ export async function updatePengaturanLembagaAction(
       tempat_terbit: tempatTerbit,
       tanggal_raport: tanggalRaport,
       nama_pimpinan: namaPimpinan,
+      domain_url: domainUrl,
     },
   };
 }

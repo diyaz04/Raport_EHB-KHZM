@@ -69,18 +69,23 @@ export async function GET(request: NextRequest) {
     });
 
     // 4. Catat ke audit_log
+    const auditMode = context.isActingAs
+      ? "act_as"
+      : context.profile.role === "admin"
+      ? "admin_langsung"
+      : "langsung";
+
     await adminClient.from("audit_log").insert({
       tabel: "raport_terbit",
       record_id: marhalahId,
       aksi: "CETAK_MASSAL_PDF",
-      perubahan: {
+      data_baru: {
         marhalahId,
         semesterId,
         totalSantri,
         durationMs,
-        mode: context.isActingAs ? "act_as" : "asli",
-        atas_nama: context.effectiveGuruId ?? null,
       },
+      mode: auditMode,
       user_id: context.user.id,
       atas_nama: context.effectiveGuruId ?? null,
     });

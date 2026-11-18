@@ -256,72 +256,91 @@ const styles = StyleSheet.create({
   // Baris Data Nilai
   tableRow: {
     flexDirection: "row",
-    borderBottomWidth: 0.8,
+    borderBottomWidth: 1,
     borderBottomColor: "#000000",
-    height: 13.5,
-    alignItems: "center",
+    height: 14,
     fontSize: 7.5,
   },
-  colNo: {
+  cellNo: {
     width: "6%",
-    textAlign: "center",
-    borderRightWidth: 0.8,
+    height: "100%",
+    borderRightWidth: 1,
     borderRightColor: "#000000",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  colMapel: {
+  cellMapel: {
     width: "28%",
-    paddingLeft: 4,
-    borderRightWidth: 0.8,
+    height: "100%",
+    borderRightWidth: 1,
     borderRightColor: "#000000",
+    justifyContent: "center",
+    paddingLeft: 4,
+    paddingRight: 2,
   },
-  colKitab: {
+  cellKitab: {
     width: "30%",
+    height: "100%",
+    borderRightWidth: 1,
+    borderRightColor: "#000000",
+    justifyContent: "center",
     paddingLeft: 4,
-    borderRightWidth: 0.8,
-    borderRightColor: "#000000",
+    paddingRight: 2,
   },
-  colAngka: {
+  cellAngka: {
     width: "10%",
-    textAlign: "center",
-    borderRightWidth: 0.8,
+    height: "100%",
+    borderRightWidth: 1,
     borderRightColor: "#000000",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  colHuruf: {
+  cellHuruf: {
     width: "16%",
-    paddingLeft: 3,
-    borderRightWidth: 0.8,
+    height: "100%",
+    borderRightWidth: 1,
     borderRightColor: "#000000",
-    fontSize: 7,
+    justifyContent: "center",
+    paddingLeft: 4,
+    paddingRight: 2,
   },
-  colRataRata: {
+  cellRataRata: {
     width: "10%",
-    textAlign: "center",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   // Baris Total & Rata-Rata
   tableRowSummary: {
     flexDirection: "row",
-    borderBottomWidth: 0.8,
+    borderBottomWidth: 1,
     borderBottomColor: "#000000",
     height: 14,
-    alignItems: "center",
     fontWeight: "bold",
     fontSize: 7.5,
   },
-  colSummaryLabel: {
+  cellSummaryLabel: {
     width: "64%",
-    textAlign: "center",
-    borderRightWidth: 0.8,
+    height: "100%",
+    borderRightWidth: 1,
     borderRightColor: "#000000",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  colSummaryVal: {
+  cellSummaryVal: {
     width: "10%",
-    textAlign: "center",
-    borderRightWidth: 0.8,
+    height: "100%",
+    borderRightWidth: 1,
     borderRightColor: "#000000",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  colSummaryEmpty: {
+  cellSummaryEmpty: {
     width: "26%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   // 5. BANNER PERINGKAT
@@ -366,40 +385,46 @@ const styles = StyleSheet.create({
   },
   catatanTableHeader: {
     flexDirection: "row",
-    height: 13.5,
+    height: 14,
     borderBottomWidth: 1,
     borderBottomColor: "#000000",
-    alignItems: "center",
     fontWeight: "bold",
     fontSize: 7.5,
   },
-  catatanColHeaderDesc: {
+  catatanHeaderCellDesc: {
     width: "60%",
-    textAlign: "center",
+    height: "100%",
     borderRightWidth: 1,
     borderRightColor: "#000000",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  catatanColHeaderVal: {
+  catatanHeaderCellVal: {
     width: "40%",
-    textAlign: "center",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   catatanTableRow: {
     flexDirection: "row",
     height: 13,
-    borderBottomWidth: 0.8,
+    borderBottomWidth: 1,
     borderBottomColor: "#000000",
-    alignItems: "center",
     fontSize: 7,
   },
-  catatanColDesc: {
+  catatanCellDesc: {
     width: "60%",
-    paddingLeft: 4,
-    borderRightWidth: 0.8,
+    height: "100%",
+    borderRightWidth: 1,
     borderRightColor: "#000000",
+    justifyContent: "center",
+    paddingLeft: 4,
   },
-  catatanColVal: {
+  catatanCellVal: {
     width: "40%",
-    textAlign: "center",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   // Naik Ke Marhalah
@@ -807,38 +832,55 @@ export function RaportDocument({
               {/* 12 Data Rows */}
               {tableRows.map((row) => (
                 <View key={row.no} style={styles.tableRow}>
-                  <Text style={styles.colNo}>{row.no}</Text>
-                  <Text style={styles.colMapel}>{row.mapel}</Text>
-                  <Text style={styles.colKitab}>{row.kitab}</Text>
-                  <Text style={styles.colAngka}>{row.nilai}</Text>
-                  <Text
-                    style={[
-                      styles.colHuruf,
-                      {
+                  <View style={styles.cellNo}>
+                    <Text>{row.no}</Text>
+                  </View>
+                  <View style={styles.cellMapel}>
+                    <Text>{row.mapel}</Text>
+                  </View>
+                  <View style={styles.cellKitab}>
+                    <Text>{row.kitab}</Text>
+                  </View>
+                  <View style={styles.cellAngka}>
+                    <Text>{row.nilai}</Text>
+                  </View>
+                  <View style={styles.cellHuruf}>
+                    <Text
+                      style={{
                         fontStyle: row.nilai !== "-" ? "italic" : "normal",
-                      },
-                    ]}
-                  >
-                    {row.huruf}
-                  </Text>
-                  <Text style={styles.colRataRata}>{row.rataRata}</Text>
+                      }}
+                    >
+                      {row.huruf}
+                    </Text>
+                  </View>
+                  <View style={styles.cellRataRata}>
+                    <Text>{row.rataRata}</Text>
+                  </View>
                 </View>
               ))}
 
               {/* Baris Jumlah Nilai */}
               <View style={styles.tableRowSummary}>
-                <Text style={styles.colSummaryLabel}>Jumlah Nilai</Text>
-                <Text style={styles.colSummaryVal}>{formattedTotal}</Text>
-                <View style={styles.colSummaryEmpty} />
+                <View style={styles.cellSummaryLabel}>
+                  <Text>Jumlah Nilai</Text>
+                </View>
+                <View style={styles.cellSummaryVal}>
+                  <Text>{formattedTotal}</Text>
+                </View>
+                <View style={styles.cellSummaryEmpty} />
               </View>
 
               {/* Baris Nilai Rata-Rata */}
               <View
                 style={[styles.tableRowSummary, { borderBottomWidth: 0 }]}
               >
-                <Text style={styles.colSummaryLabel}>Nilai Rata-Rata</Text>
-                <Text style={styles.colSummaryVal}>{formattedRataRata}</Text>
-                <View style={styles.colSummaryEmpty} />
+                <View style={styles.cellSummaryLabel}>
+                  <Text>Nilai Rata-Rata</Text>
+                </View>
+                <View style={styles.cellSummaryVal}>
+                  <Text>{formattedRataRata}</Text>
+                </View>
+                <View style={styles.cellSummaryEmpty} />
               </View>
             </View>
 
@@ -855,30 +897,36 @@ export function RaportDocument({
                 {/* Tabel Kepribadian */}
                 <View style={styles.catatanTable}>
                   <View style={styles.catatanTableHeader}>
-                    <Text style={styles.catatanColHeaderDesc}>
-                      Kepribadian
-                    </Text>
-                    <Text style={styles.catatanColHeaderVal}>Predikat</Text>
+                    <View style={styles.catatanHeaderCellDesc}>
+                      <Text>Kepribadian</Text>
+                    </View>
+                    <View style={styles.catatanHeaderCellVal}>
+                      <Text>Predikat</Text>
+                    </View>
                   </View>
                   <View style={styles.catatanTableRow}>
-                    <Text style={styles.catatanColDesc}>
-                      1 Akhlak/ Budi Pekerti
-                    </Text>
-                    <Text style={styles.catatanColVal}>
-                      {student.catatan?.akhlak || ""}
-                    </Text>
+                    <View style={styles.catatanCellDesc}>
+                      <Text>1 Akhlak/ Budi Pekerti</Text>
+                    </View>
+                    <View style={styles.catatanCellVal}>
+                      <Text>{student.catatan?.akhlak || ""}</Text>
+                    </View>
                   </View>
                   <View style={styles.catatanTableRow}>
-                    <Text style={styles.catatanColDesc}>2 Ketekunan</Text>
-                    <Text style={styles.catatanColVal}>
-                      {student.catatan?.ketekunan || ""}
-                    </Text>
+                    <View style={styles.catatanCellDesc}>
+                      <Text>2 Ketekunan</Text>
+                    </View>
+                    <View style={styles.catatanCellVal}>
+                      <Text>{student.catatan?.ketekunan || ""}</Text>
+                    </View>
                   </View>
                   <View style={styles.catatanTableRow}>
-                    <Text style={styles.catatanColDesc}>3 Kerapihan</Text>
-                    <Text style={styles.catatanColVal}>
-                      {student.catatan?.kerapihan || ""}
-                    </Text>
+                    <View style={styles.catatanCellDesc}>
+                      <Text>3 Kerapihan</Text>
+                    </View>
+                    <View style={styles.catatanCellVal}>
+                      <Text>{student.catatan?.kerapihan || ""}</Text>
+                    </View>
                   </View>
                   <View
                     style={[
@@ -886,32 +934,44 @@ export function RaportDocument({
                       { borderBottomWidth: 0 },
                     ]}
                   >
-                    <Text style={styles.catatanColDesc}>4 Kebersihan</Text>
-                    <Text style={styles.catatanColVal}>
-                      {student.catatan?.kebersihan || ""}
-                    </Text>
+                    <View style={styles.catatanCellDesc}>
+                      <Text>4 Kebersihan</Text>
+                    </View>
+                    <View style={styles.catatanCellVal}>
+                      <Text>{student.catatan?.kebersihan || ""}</Text>
+                    </View>
                   </View>
                 </View>
 
                 {/* Tabel Ketidakhadiran */}
                 <View style={[styles.catatanTable, { marginTop: 4 }]}>
                   <View style={styles.catatanTableHeader}>
-                    <Text style={styles.catatanColHeaderDesc}>
-                      Ketidakhadiran
-                    </Text>
-                    <Text style={styles.catatanColHeaderVal}>Jumlah</Text>
+                    <View style={styles.catatanHeaderCellDesc}>
+                      <Text>Ketidakhadiran</Text>
+                    </View>
+                    <View style={styles.catatanHeaderCellVal}>
+                      <Text>Jumlah</Text>
+                    </View>
                   </View>
                   <View style={styles.catatanTableRow}>
-                    <Text style={styles.catatanColDesc}>1 Sakit</Text>
-                    <Text style={styles.catatanColVal}>
-                      {student.catatan?.sakit ? `${student.catatan.sakit}` : ""}
-                    </Text>
+                    <View style={styles.catatanCellDesc}>
+                      <Text>1 Sakit</Text>
+                    </View>
+                    <View style={styles.catatanCellVal}>
+                      <Text>
+                        {student.catatan?.sakit ? `${student.catatan.sakit}` : ""}
+                      </Text>
+                    </View>
                   </View>
                   <View style={styles.catatanTableRow}>
-                    <Text style={styles.catatanColDesc}>2 Izin</Text>
-                    <Text style={styles.catatanColVal}>
-                      {student.catatan?.izin ? `${student.catatan.izin}` : ""}
-                    </Text>
+                    <View style={styles.catatanCellDesc}>
+                      <Text>2 Izin</Text>
+                    </View>
+                    <View style={styles.catatanCellVal}>
+                      <Text>
+                        {student.catatan?.izin ? `${student.catatan.izin}` : ""}
+                      </Text>
+                    </View>
                   </View>
                   <View
                     style={[
@@ -919,10 +979,14 @@ export function RaportDocument({
                       { borderBottomWidth: 0 },
                     ]}
                   >
-                    <Text style={styles.catatanColDesc}>3 Alpa</Text>
-                    <Text style={styles.catatanColVal}>
-                      {student.catatan?.alpa ? `${student.catatan.alpa}` : ""}
-                    </Text>
+                    <View style={styles.catatanCellDesc}>
+                      <Text>3 Alpa</Text>
+                    </View>
+                    <View style={styles.catatanCellVal}>
+                      <Text>
+                        {student.catatan?.alpa ? `${student.catatan.alpa}` : ""}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 

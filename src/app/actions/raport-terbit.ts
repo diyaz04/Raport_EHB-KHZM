@@ -61,10 +61,7 @@ export async function getOrPublishRaportAction({
         id,
         nis,
         nama,
-        jenis_kelamin,
-        tempat_lahir,
-        tanggal_lahir,
-        nama_wali
+        jenis_kelamin
       ),
       marhalah:marhalah_id (
         id,
@@ -276,9 +273,6 @@ export async function getOrPublishRaportAction({
       nis: (enrollment.santri as { nis?: string | null })?.nis || null,
       nama: (enrollment.santri as { nama?: string })?.nama || "-",
       jenis_kelamin: (enrollment.santri as { jenis_kelamin?: string })?.jenis_kelamin || null,
-      tempat_lahir: (enrollment.santri as { tempat_lahir?: string })?.tempat_lahir || null,
-      tanggal_lahir: (enrollment.santri as { tanggal_lahir?: string })?.tanggal_lahir || null,
-      nama_wali: (enrollment.santri as { nama_wali?: string })?.nama_wali || null,
     },
     marhalah: {
       id: marhalahId,
@@ -390,19 +384,24 @@ export async function getOrPublishRaportAction({
   }
 
   // J. Catat ke audit_log
+  const auditMode = context.isActingAs
+    ? "act_as"
+    : context.profile.role === "admin"
+    ? "admin_langsung"
+    : "langsung";
+
   await adminClient.from("audit_log").insert({
     tabel: "raport_terbit",
     record_id: inserted.id,
     aksi: nextVersion > 1 ? "TERBITKAN_ULANG" : "TERBITKAN_PERTAMA",
-    perubahan: {
+    data_baru: {
       enrollment_id: enrollmentId,
       semester_id: semesterId,
       versi: nextVersion,
       kode_verifikasi: kodeVerifikasi,
       status: "valid",
-      mode: context.isActingAs ? "act_as" : "asli",
-      atas_nama: context.effectiveGuruId ?? null,
     },
+    mode: auditMode,
     user_id: context.user.id,
     atas_nama: context.effectiveGuruId ?? null,
   });

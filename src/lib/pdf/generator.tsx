@@ -9,6 +9,7 @@ import {
   type RaportSubjectData,
 } from "./raport-document";
 import { getOrPublishRaportAction } from "@/app/actions/raport-terbit";
+import { generateVerificationQRCode } from "@/lib/qr/generate-qr";
 
 export interface GenerateClassPdfResult {
   buffer: Buffer;
@@ -273,6 +274,41 @@ export async function generateClassRaportPdfBuffer({
         ? studentTotalNilai / scores.length
         : null;
 
+    // Titimangsa & Tanggal Terbit
+    let configuredTanggalRaport: string | null = null;
+    if (lembaga) {
+      if ("tanggal_raport" in lembaga && typeof (lembaga as Record<string, unknown>).tanggal_raport === "string") {
+        configuredTanggalRaport = (lembaga as Record<string, unknown>).tanggal_raport as string;
+      } else if (lembaga.logo_path) {
+        try {
+          const parsed = JSON.parse(lembaga.logo_path);
+          if (parsed && typeof parsed.tanggal_raport === "string") {
+            configuredTanggalRaport = parsed.tanggal_raport;
+          }
+        } catch {
+          // logo_path bukan JSON
+        }
+      }
+    }
+
+    const finalTanggalTerbit =
+      configuredTanggalRaport ||
+      (pubResult.diterbitkanPada
+        ? new Intl.DateTimeFormat("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          }).format(new Date(pubResult.diterbitkanPada))
+        : "20 Desember 2025");
+
+    // Pastikan QR Code & Kode Verifikasi selalu terisi valid
+    const finalKodeVerifikasi =
+      pubResult.kodeVerifikasi ||
+      `ZM-${(santriObj.nis || enr.id.substring(0, 8)).toUpperCase()}`;
+    const finalQrDataUrl =
+      pubResult.qrDataUrl ||
+      (await generateVerificationQRCode(finalKodeVerifikasi));
+
     studentsDataList.push({
       santriId: santriObj.id,
       nama: santriObj.nama || "-",
@@ -283,16 +319,10 @@ export async function generateClassRaportPdfBuffer({
       waliKelas: waliKelasNama || "SINAR KHOTIMATUL HUSNA, S.Pd",
       pimpinanNama: lembaga?.nama_pimpinan || "KH. MIMIH SAEFUL MILLAH, S.Pd",
       tempatTerbit: lembaga?.tempat_terbit || "Sukamenak",
-      tanggalTerbit: pubResult.diterbitkanPada
-        ? new Intl.DateTimeFormat("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          }).format(new Date(pubResult.diterbitkanPada))
-        : "20 Desember 2025",
+      tanggalTerbit: finalTanggalTerbit,
       isDraft: false, // Selalu false karena hanya status final
-      qrDataUrl: pubResult.qrDataUrl || null,
-      kodeVerifikasi: pubResult.kodeVerifikasi || null,
+      qrDataUrl: finalQrDataUrl,
+      kodeVerifikasi: finalKodeVerifikasi,
       ranking: peringkat?.peringkat ?? null,
       totalSantri,
       totalNilai: studentTotalNilai,

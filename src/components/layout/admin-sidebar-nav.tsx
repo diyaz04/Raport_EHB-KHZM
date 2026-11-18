@@ -14,6 +14,7 @@ import {
   UsersIcon,
   UserCheckIcon,
   ClipboardListIcon,
+  SlidersHorizontalIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -105,6 +106,16 @@ const navGroups: NavGroup[] = [
         label: "Jadwal & Ruang EHB",
         href: "/admin/ehb",
         icon: ClipboardListIcon,
+      },
+    ],
+  },
+  {
+    groupLabel: "Pengaturan & Raport",
+    items: [
+      {
+        label: "Titimangsa & Lembaga",
+        href: "/admin/pengaturan",
+        icon: SlidersHorizontalIcon,
       },
     ],
   },
